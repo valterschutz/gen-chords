@@ -1,12 +1,19 @@
 # gen-chords
 
-`gen-chords` is a Python program that generates PNG images of musical chords based on specified parameters such as clef type, root note range, and chord intervals. The program uses the [pymusictheory](https://github.com/valterschutz/pymusictheory) library to handle musical theory concepts and MuseScore to render the chords into images.
+`gen-chords` is a collection of Python programs that
+1. Generate PNG images of musical chords based on specified parameters such as clef type, root note range, and chord intervals.
+2. Produce an [Anki](https://apps.ankiweb.net/) package for spaced repetition.
+
+The program uses
+- The [pymusictheory](https://github.com/valterschutz/pymusictheory) library to handle musical theory concepts.
+- [MuseScore](https://musescore.org/en/download) to render the chords into images.
+- [genanki](https://github.com/kerrickstaley/genanki) to create the [Anki](https://apps.ankiweb.net/) package.
 
 ## Motivation
 
-Page 18 of Jeremy Siskind's [Jazz Piano Fundamentals (Book 1)](https://jeremysiskind.com/product/jazz-piano-fundamentals-book-1/) instructs the reader to generate flashcards for all major, minor, and dominant seventh chords in the F clef. This program allows you to generate those images with a single command. To create flashcards from the images, use a flashcard program like [Anki](https://apps.ankiweb.net/).
+Page 18 of Jeremy Siskind's [Jazz Piano Fundamentals (Book 1)](https://jeremysiskind.com/product/jazz-piano-fundamentals-book-1/) instructs the reader to generate flashcards for all major, minor, and dominant seventh chords in the F clef.
 
-If you don't care about generating your own chord images, you can simply download the `assets` folder, which contains all seventh chords in the range E2–E3 on the F clef.
+If you don't care about generating your own chord images and flashcards, you can simply download the `assets` folder, which contains images of all seventh chords in the range E2–E3 on the F clef, and also a corresponding Anki package (`chord_images.apkg`).
 
 
 ## Features
@@ -14,11 +21,12 @@ If you don't care about generating your own chord images, you can simply downloa
 - Generate seventh chords (major, minor, dominant) in different clefs (e.g., G clef, F clef).
 - Specify a range of root notes to generate chords for.
 - Outputs PNG images of the generated chords, organized into subfolders by chord type.
+- Takes the folder of PNG images as input and generates an Anki package from it.
 
 ## Requirements
 
 - Python 3.13 or higher
-- MuseScore installed and available in the system's PATH
+- [MuseScore](https://musescore.org/en/download) installed and available in the system's PATH
 
 ## Installation
 
@@ -30,7 +38,7 @@ If you don't care about generating your own chord images, you can simply downloa
    cd gen-chords
    ```
 
-3. Install the required Python dependencies using `uv`:
+3. Install the required Python dependencies using [uv](https://docs.astral.sh/uv/):
    ```bash
    uv sync
    ```
@@ -39,31 +47,55 @@ If you don't care about generating your own chord images, you can simply downloa
 
 ## Usage
 
-Run the program with the following arguments:
+### Generating chord images
+
+Run the `gen_chord_images` program with the following arguments:
 
 ```bash
-uv run main.py --clef <clef> --root_range <root1,root2> --folder_path <output_folder>
+uv run gen_chord_images.py --clef <clef> --root_range <root1,root2> --folder_path <output_folder>
 ```
 
-### Arguments
+#### Arguments
 
 - `--clef`: The clef type to use for the generated chords. Choices: `G`, `F`.
 - `--root_range`: The range of root notes to generate chords for, in the format `root1,root2` (e.g., `E2,E3`).
 - `--folder_path`: The path to the folder where the generated images will be saved. Each chord type will be saved in a separate subfolder.
 
-### Example
+#### Example
 
-To generate chords in the G clef for root notes ranging from `C4` to `C5` and save them in the `output` folder:
+To generate chords in the F clef for root notes ranging from `E2` to `E3` and save them in the `assets` folder:
 
 ```bash
-uv run main.py --clef G --root_range C4,C5 --folder_path output
+uv run gen_chord_images.py --clef F --root_range E2,E3 --folder_path assets
+```
+
+### Creating an Anki package
+
+Run the `gen_anki_pkg` program with the following arguments:
+
+```bash
+uv run gen_anki_pkg.py --folder_path <input_folder> --pkg_path <output_file>
+```
+
+#### Arguments
+
+- `--folder_path`: The path to the folder containing the generated chord images. The same folder that `gen_chord_images` created.
+- `--pkg_path`: The path to the output [Anki](https://apps.ankiweb.net/) package file (e.g., `output.apkg`).
+
+#### Example
+
+To create an [Anki](https://apps.ankiweb.net/) package from the chord images in the `assets` folder and save it as `assets/chord_images.apkg`:
+
+```bash
+uv run gen_anki_pkg.py --folder_path assets --pkg_path assets/chord_images.apkg
 ```
 
 ## How It Works
 
 1. **Chord Generation**: The program calculates all possible root notes within the specified range and generates chords by stacking intervals on top of each root.
 2. **MusicXML Creation**: For each chord, a MusicXML representation is created.
-3. **Image Rendering**: The MusicXML is passed to MuseScore to generate a PNG image of the chord.
+3. **Image Rendering**: The MusicXML is passed to [MuseScore](https://musescore.org/en/download) to generate a PNG image of the chord.
+4. **Anki Package Creation**: The program takes the folder of generated chord images, organizes them into [Anki](https://apps.ankiweb.net/) notes, and creates an [Anki](https://apps.ankiweb.net/) package (`.apkg`) file. Each note contains a chord image and its corresponding name.
 
 ## Supported Chord Types
 

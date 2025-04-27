@@ -1,13 +1,25 @@
 [project]
 name = "gen-chords"
-version = "0.1.0"
-description = "Generates png images of chords."
+version = "1.0.0"
+description = "Generates PNG images and flashcards of chords."
+authors = [{ name = "Valter Schütz", email = "valterschutz@proton.me" }]
+license = { file = "LICENSE" }
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "genanki>=0.13.1",
     "pymusictheory==2.2.1",
     "tqdm>=4.67.1",
 ]
+classifiers = [
+    "Topic :: Artistic Software",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Topic :: Education",
+]
+[project.urls]
+Homepage = "https://github.com/valterschutz/gen-chords"
 
 [dependency-groups]
 dev = [
