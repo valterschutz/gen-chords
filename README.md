@@ -2,6 +2,13 @@
 
 `gen-chords` is a Python program that generates PNG images of musical chords based on specified parameters such as clef type, root note range, and chord intervals. The program uses the [pymusictheory](https://github.com/valterschutz/pymusictheory) library to handle musical theory concepts and MuseScore to render the chords into images.
 
+## Motivation
+
+Page 18 of Jeremy Siskind's [Jazz Piano Fundamentals (Book 1)](https://jeremysiskind.com/product/jazz-piano-fundamentals-book-1/) instructs the reader to generate flashcards for all major, minor, and dominant seventh chords in the F clef. This program allows you to generate those images with a single command. To create flashcards from the images, use a flashcard program like [Anki](https://apps.ankiweb.net/).
+
+If you don't care about generating your own chord images, you can simply download the `assets` folder, which contains all seventh chords in the range E2–E3 on the F clef.
+
+
 ## Features
 
 - Generate seventh chords (major, minor, dominant) in different clefs (e.g., G clef, F clef).
