@@ -1,16 +1,32 @@
+import argparse
+from enum import Enum
+from tqdm import tqdm
 import os
+from pathlib import Path
 import subprocess
+import tempfile
 import textwrap
 
 from pymusictheory import Chord, Interval, NoteAlteration, NoteInOctave
 
 
-def chord_to_musicxml(chord: Chord) -> str:
+class ClefType(Enum):
     """
-    Generate MusicXML for the chord based on its notes.
+    Enum for Clef types.
+
+    The values are tuples of the form (clef_sign, line_number).
     """
 
-    template_xml = textwrap.dedent("""\
+    G = ("G", 2)
+    F = ("F", 4)
+
+
+def chord_to_musicxml(chord: Chord, clef_type: ClefType) -> str:
+    """
+    Generate MusicXML for the chord based on its notes and clef type.
+    """
+
+    template_xml = textwrap.dedent(f"""\
         <?xml version="1.0" encoding="UTF-8"?>
         <!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
         <score-partwise version="3.1">
@@ -27,12 +43,12 @@ def chord_to_musicxml(chord: Chord) -> str:
                 <fifths>0</fifths>
                 </key>
                 <clef>
-                <sign>G</sign>
-                <line>2</line>
+                <sign>{clef_type.value[0]}</sign>
+                <line>{clef_type.value[1]}</line>
                 </clef>
             </attributes>
 
-            {}
+            {{}}
 
             </measure>
         </part>
@@ -47,9 +63,9 @@ def chord_to_musicxml(chord: Chord) -> str:
             <note>
                 {"<chord/>" if i != 0 else ""}
                 <pitch>
-                <step>{note_in_octave.letter}</step>
-                <alter>{int(note_in_octave.alteration)}</alter>
-                <octave>{note_in_octave.octave}</octave>
+                    <step>{note_in_octave.letter}</step>
+                    <alter>{int(note_in_octave.alteration)}</alter>
+                    <octave>{note_in_octave.octave}</octave>
                 </pitch>
                 <duration>4</duration>
                 <type>whole</type>
@@ -64,43 +80,58 @@ def chord_to_musicxml(chord: Chord) -> str:
     return musicxml
 
 
-def musicxml_to_png(musicxml: str, path: str) -> None:
+def musicxml_to_png(musicxml: str, path: Path) -> None:
     """
     Generate an image at `path` containing the specified musicxml.
     """
 
-    # Write xml to temporary file
-    with open("temp.xml", "w") as file:
-        file.write(musicxml)
-    print("MusicXML file 'temp.xml' has been generated.")
+    # Create a temporary directory
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_file_path = Path(temp_dir) / f"{path.stem}.xml"
 
-    # Run `mscore` command to generate png image
-    try:
-        subprocess.run(["mscore", "temp.xml", "-o", path, "-T", "50"], check=True)
-        print(f"MuseScore has generated {path}.")
-    except subprocess.CalledProcessError as e:
-        print(f"Error generating image: {e}")
-    except FileNotFoundError:
-        print("MuseScore is not installed or not found in PATH.")
+        # Write xml to temporary file
+        with open(temp_file_path, "w") as file:
+            file.write(musicxml)
+
+        # Run `mscore` command to generate png image
+        try:
+            # subprocess.run(["mscore", temp_file_path, "-o", path, "-T", "50"], check=True)
+            subprocess.run(
+                ["mscore", temp_file_path, "-o", path, "-T", "50"],
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=True,
+            )
+            # For some reason, musescore appends "-1" to the filename, so we need to rename it
+            generated_path = path.parent / f"{path.stem}-1{path.suffix}"
+            generated_path.rename(path)
+        except subprocess.CalledProcessError as e:
+            print(f"Error generating image: {e}")
+        except FileNotFoundError:
+            print("MuseScore is not installed or not found in PATH.")
 
 
-def main():
-    chord = Chord(
-        {
-            NoteInOctave.from_str("C4"),
-            NoteInOctave.from_str("E4"),
-            NoteInOctave.from_str("G#4"),
-        }
-    )
+def chord_generation(
+    root_range: tuple[NoteInOctave, NoteInOctave],
+    clef_type: ClefType,
+    intervals: list[Interval],
+    folder_path: Path,
+) -> None:
+    """
+    Generates png images of chords at folder_path.
 
-    # We will generate all chords with the root between these notes, not including the end root. We will only consider roots with no accidental or a single accidental.
-    start_root = NoteInOctave.from_str("C4")
-    end_root = NoteInOctave.from_str("C5")
+    Args:
+        root_range: The range of roots to generate chords for. All other notes will be stacked on top of the root.
+        clef_type: The clef type to use for the generated chords.
+        intervals: The intervals to use for generating the chords. Decides how many notes will be stacked on top of the root and with what distance.
+        folder_path: The path to the folder where the generated images will be saved.
+    """
 
-    # Find all possible notes between the specified roots, with possible *single* alterations (natural/sharp/flat)
+    # Find all possible root notes between the specified roots, with possible *single* alterations (natural/sharp/flat)
     roots_with_duplicates: list[set[NoteInOctave]] = []
-    current_note_position = start_root.absolute_semitone_offset
-    while current_note_position != end_root.absolute_semitone_offset:
+    current_note_position = root_range[0].absolute_semitone_offset
+    while current_note_position != root_range[1].absolute_semitone_offset:
         # Ignore notes with double alterations (double sharp/flat)
         root_candidates = {
             note
@@ -116,24 +147,114 @@ def main():
 
     sorted_roots = sorted(roots)
 
-    # For each root, construct a major chord
+    # For each root, construct the desired chord
     chords = [
-        Chord({root, root + Interval.MAJOR_THIRD, root + Interval.PERFECT_FIFTH})
-        for root in sorted_roots
+        Chord({root + interval for interval in intervals}) for root in sorted_roots
     ]
 
-    musicxmls = [chord_to_musicxml(chord) for chord in chords]
+    musicxmls = [chord_to_musicxml(chord, clef_type) for chord in chords]
 
-    # Create "chords" directory if not present
-    os.makedirs("chords", exist_ok=True)
+    # Create the output directory if not present
+    os.makedirs(folder_path, exist_ok=True)
 
     # Write each musicxml string to a file, with filename containing the notes
-    for musicxml, chord in zip(musicxmls, chords):
+    for musicxml, chord in tqdm(
+        zip(musicxmls, chords), total=len(chords), desc="Generating chords"
+    ):
         sorted_notes = sorted(chord)
         filename = "_".join((str(note) for note in sorted_notes))
-        musicxml_to_png(musicxml, os.path.join("chords", f"{filename}.png"))
-        print(f"Generated {filename}.png")
+        filepath = folder_path / f"{filename}.png"
+        musicxml_to_png(musicxml, filepath)
+
+
+def main(args: argparse.Namespace) -> None:
+    chord_types = [
+        (
+            "major_seventh",
+            [
+                Interval.PERFECT_UNISON,
+                Interval.MAJOR_THIRD,
+                Interval.PERFECT_FIFTH,
+                Interval.MAJOR_SEVENTH,
+            ],
+        ),
+        (
+            "dominant_seventh",
+            [
+                Interval.PERFECT_UNISON,
+                Interval.MAJOR_THIRD,
+                Interval.PERFECT_FIFTH,
+                Interval.MINOR_SEVENTH,
+            ],
+        ),
+        (
+            "minor_seventh",
+            [
+                Interval.PERFECT_UNISON,
+                Interval.MINOR_THIRD,
+                Interval.PERFECT_FIFTH,
+                Interval.MINOR_SEVENTH,
+            ],
+        ),
+    ]
+
+    for chord_name, intervals in chord_types:
+        print(f"--- {chord_name.upper()} CHORDS ---")
+        chord_generation(
+            root_range=args.root_range,
+            clef_type=args.clef,
+            intervals=intervals,
+            folder_path=args.folder_path / chord_name,
+        )
+
+
+def parse_clef(clef_str: str) -> ClefType:
+    """
+    Parse a clef string (e.g., "G" or "F") into a ClefType enum.
+    """
+    try:
+        return ClefType[clef_str]
+    except KeyError:
+        raise ValueError(f"Invalid clef type: {clef_str}. Must be 'G' or 'F'.")
+
+
+def parse_root_range(value: str) -> tuple[NoteInOctave, NoteInOctave]:
+    try:
+        strs = value.split(",")  # Split the input string by commas
+        return (
+            NoteInOctave.from_str(
+                strs[0].strip()
+            ),  # Convert the first part to a NoteInOctave
+            NoteInOctave.from_str(
+                strs[1].strip()
+            ),  # Convert the second part to a NoteInOctave
+        )
+    except Exception as _:
+        raise argparse.ArgumentTypeError(
+            f"Invalid root range format: {value}. Expected format: 'root1,root2'."
+        )
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Generate chord images.")
+    parser.add_argument(
+        "--clef",
+        type=parse_clef,
+        required=True,
+        help=f"The clef type to use for the generated chords. Choices: {', '.join(e.name for e in ClefType)}.",
+    )
+    parser.add_argument(
+        "--root_range",
+        type=parse_root_range,
+        required=True,
+        help="The range of roots to generate chords for, in the format 'root1,root2'.",
+    )
+    parser.add_argument(
+        "--folder_path",
+        type=Path,
+        required=True,
+        help="The path to the folder where the generated images will be saved. Each chord type will be saved in a separate subfolder.",
+    )
+    args = parser.parse_args()
+
+    main(args)

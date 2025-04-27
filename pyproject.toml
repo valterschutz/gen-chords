@@ -5,7 +5,8 @@ description = "Generates png images of chords."
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "pymusictheory==2.1.0",
+    "pymusictheory==2.2.1",
+    "tqdm>=4.67.1",
 ]
 
 [dependency-groups]
