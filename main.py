@@ -162,8 +162,10 @@ def chord_generation(
         zip(musicxmls, chords), total=len(chords), desc="Generating chords"
     ):
         sorted_notes = sorted(chord)
-        filename = "_".join((str(note) for note in sorted_notes))
-        filepath = folder_path / f"{filename}.png"
+        filestem = str(sorted_notes[0])
+        # Replace unicode characters with ASCII equivalents
+        filestem = filestem.replace("♯", "#").replace("♭", "b")
+        filepath = folder_path / f"{filestem}.png"
         musicxml_to_png(musicxml, filepath)
 
 
