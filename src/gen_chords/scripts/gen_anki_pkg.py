@@ -4,6 +4,7 @@ Generates an anki package of chords at folder_path.
 
 import argparse
 from pathlib import Path
+import textwrap
 
 import genanki
 import re
@@ -31,8 +32,17 @@ def get_model():
         templates=[
             {
                 "name": "Chord image and name",
-                "qfmt": "{{ChordImage}}",
-                "afmt": '{{FrontSide}}<hr id="answer">{{PrettyChordName}}',
+                "qfmt": textwrap.dedent("""
+                <div style="text-align: center;">
+                    {{ChordImage}}
+                </div>
+                """),
+                "afmt": textwrap.dedent("""
+                {{FrontSide}}<hr id="answer">
+                <div style="text-align: center; font-size: 42px;">
+                    {{PrettyChordName}}
+                </div>
+                """),
             }
         ],
         sort_field_index=2,  # sort by ugly chord name
