@@ -52,7 +52,7 @@ If you don't care about generating your own chord images and flashcards, you can
 Run the `gen_chord_images` program with the following arguments:
 
 ```bash
-uv run gen_chord_images.py --clef <clef> --root_range <root1,root2> --folder_path <output_folder>
+uv run gen_chord_images --clef <clef> --root_range <root1,root2> --folder_path <output_folder>
 ```
 
 #### Arguments
@@ -66,7 +66,7 @@ uv run gen_chord_images.py --clef <clef> --root_range <root1,root2> --folder_pat
 To generate chords in the F clef for root notes ranging from `E2` to `E3` and save them in the `assets` folder:
 
 ```bash
-uv run gen_chord_images.py --clef F --root_range E2,E3 --folder_path assets
+uv run gen_chord_images --clef F --root_range E2,E3 --folder_path assets
 ```
 
 ### Creating an Anki package
@@ -74,7 +74,7 @@ uv run gen_chord_images.py --clef F --root_range E2,E3 --folder_path assets
 Run the `gen_anki_pkg` program with the following arguments:
 
 ```bash
-uv run gen_anki_pkg.py --folder_path <input_folder> --pkg_path <output_file>
+uv run gen_anki_pkg --folder_path <input_folder> --pkg_path <output_file>
 ```
 
 #### Arguments
@@ -87,7 +87,7 @@ uv run gen_anki_pkg.py --folder_path <input_folder> --pkg_path <output_file>
 To create an [Anki](https://apps.ankiweb.net/) package from the chord images in the `assets` folder and save it as `assets/chord_images.apkg`:
 
 ```bash
-uv run gen_anki_pkg.py --folder_path assets --pkg_path assets/chord_images.apkg
+uv run gen_anki_pkg --folder_path assets --pkg_path assets/chord_images.apkg
 ```
 
 ## How It Works

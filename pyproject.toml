@@ -1,6 +1,6 @@
 [project]
 name = "gen-chords"
-version = "1.0.0"
+version = "1.0.1"
 description = "Generates PNG images and flashcards of chords."
 authors = [{ name = "Valter Schütz", email = "valterschutz@proton.me" }]
 license = { file = "LICENSE" }
@@ -21,7 +21,18 @@ classifiers = [
 [project.urls]
 Homepage = "https://github.com/valterschutz/gen-chords"
 
+[project.scripts]
+gen_anki_pkg = "gen_chords.scripts.gen_anki_pkg:entry"
+gen_chord_images = "gen_chords.scripts.gen_chord_images:entry"
+
 [dependency-groups]
 dev = [
     "ruff>=0.11.7",
 ]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/gen_chords"]

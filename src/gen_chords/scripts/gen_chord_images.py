@@ -9,6 +9,8 @@ import textwrap
 
 from pymusictheory import Chord, Interval, NoteAlteration, NoteInOctave
 
+from gen_chords.utils import chord_type_to_ugly_symbol
+
 
 class ClefType(Enum):
     """
@@ -57,7 +59,7 @@ def chord_to_musicxml(chord: Chord, clef_type: ClefType) -> str:
 
     chord_xml = ""
 
-    for i, note_in_octave in enumerate(chord):
+    for i, note_in_octave in enumerate(sorted(chord)):
         chord_xml += textwrap.indent(
             textwrap.dedent(f"""
             <note>
@@ -208,6 +210,12 @@ def main(args: argparse.Namespace) -> None:
             intervals=intervals,
             folder_path=args.folder_path / chord_name,
         )
+        # Anki peculiarity: each file name must be unique, so we append the chord name to each file name
+        for chord_image_path in (args.folder_path / chord_name).glob("**/*.png"):
+            chord_image_path.rename(
+                chord_image_path.parent
+                / f"{chord_image_path.stem}_{chord_type_to_ugly_symbol(chord_name)}.png"
+            )
 
 
 def parse_clef(clef_str: str) -> ClefType:
@@ -237,7 +245,7 @@ def parse_root_range(value: str) -> tuple[NoteInOctave, NoteInOctave]:
         )
 
 
-if __name__ == "__main__":
+def entry():
     parser = argparse.ArgumentParser(description="Generate chord images.")
     parser.add_argument(
         "--clef",
@@ -260,3 +268,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     main(args)
+
+
+if __name__ == "__main__":
+    entry()
