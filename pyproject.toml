@@ -1,6 +1,6 @@
 [project]
 name = "gen-chords"
-version = "1.0.1"
+version = "1.0.2"
 description = "Generates PNG images and flashcards of chords."
 authors = [{ name = "Valter Schütz", email = "valterschutz@proton.me" }]
 license = { file = "LICENSE" }

@@ -9,7 +9,7 @@ import textwrap
 
 from pymusictheory import Chord, Interval, NoteAlteration, NoteInOctave
 
-from gen_chords.utils import chord_type_to_ugly_symbol
+from gen_chords.utils import chord_type_to_long_symbol
 
 
 class ClefType(Enum):
@@ -214,7 +214,7 @@ def main(args: argparse.Namespace) -> None:
         for chord_image_path in (args.folder_path / chord_name).glob("**/*.png"):
             chord_image_path.rename(
                 chord_image_path.parent
-                / f"{chord_image_path.stem}_{chord_type_to_ugly_symbol(chord_name)}.png"
+                / f"{chord_image_path.stem}_{chord_type_to_long_symbol(chord_name)}.png"
             )
 
 

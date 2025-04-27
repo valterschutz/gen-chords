@@ -9,8 +9,8 @@ import genanki
 import re
 
 from gen_chords.utils import (
+    chord_type_to_long_symbol,
     chord_type_to_pretty_symbol,
-    chord_type_to_ugly_symbol,
     ugly_root_str_to_pretty_root_str,
 )
 
@@ -25,16 +25,17 @@ def get_model():
         "Chord image and name",
         fields=[
             {"name": "ChordImage"},
-            {"name": "ChordName"},
+            {"name": "PrettyChordName"},
+            {"name": "UglyChordName"},
         ],
         templates=[
             {
                 "name": "Chord image and name",
                 "qfmt": "{{ChordImage}}",
-                "afmt": '{{FrontSide}}<hr id="answer">{{ChordName}}',
+                "afmt": '{{FrontSide}}<hr id="answer">{{PrettyChordName}}',
             }
         ],
-        sort_field_index=1,  # sort by chord name
+        sort_field_index=2,  # sort by ugly chord name
     )
     return model
 
@@ -59,7 +60,7 @@ def main(args):
         ) + chord_type_to_pretty_symbol(chord_image_path.parts[-2])
 
         # Use an ugly string for the GUID
-        ugly_chord_name = match[0] + chord_type_to_ugly_symbol(
+        long_chord_name = match[0] + chord_type_to_long_symbol(
             chord_image_path.parts[-2]
         )
 
@@ -68,8 +69,9 @@ def main(args):
             fields=[
                 f'<img src="{chord_image_path.name}">',
                 pretty_chord_name,
+                long_chord_name,
             ],
-            guid=ugly_chord_name,
+            guid=long_chord_name,
         )
         deck.add_note(note)
 
